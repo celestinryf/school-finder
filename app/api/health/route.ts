@@ -7,7 +7,10 @@ export async function GET() {
     const [rows] = await pool.query("SELECT 1 AS ok");
     return NextResponse.json({ status: "connected", result: rows });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
+    const message =
+      process.env.NODE_ENV === "development" && error instanceof Error
+        ? error.message
+        : "Internal server error";
     return NextResponse.json(
       { status: "error", message },
       { status: 500 }

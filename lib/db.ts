@@ -1,10 +1,13 @@
 import mysql from "mysql2/promise";
 
-let pool: mysql.Pool | null = null;
+declare global {
+  // eslint-disable-next-line no-var
+  var _mysqlPool: mysql.Pool | undefined;
+}
 
 export function getPool(): mysql.Pool {
-  if (!pool) {
-    pool = mysql.createPool({
+  if (!globalThis._mysqlPool) {
+    globalThis._mysqlPool = mysql.createPool({
       host: process.env.DATABASE_HOST,
       port: Number(process.env.DATABASE_PORT) || 4000,
       user: process.env.DATABASE_USER,
@@ -16,5 +19,5 @@ export function getPool(): mysql.Pool {
       queueLimit: 0,
     });
   }
-  return pool;
+  return globalThis._mysqlPool;
 }

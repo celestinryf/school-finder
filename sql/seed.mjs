@@ -27,8 +27,9 @@ async function seed() {
   console.log("Seed complete.");
 
   // Verify: count rows in colleges table
+  const dbName = process.env.DATABASE_NAME;
   const [rows] = await conn.query(
-    "SELECT COUNT(*) AS count FROM ryf_celestin_and_sia_preston_db.colleges"
+    `SELECT COUNT(*) AS count FROM ${dbName}.colleges`
   );
   console.log(`Verification: ${rows[0].count} colleges in database.`);
 
