@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
 
