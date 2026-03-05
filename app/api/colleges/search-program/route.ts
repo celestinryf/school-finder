@@ -5,7 +5,10 @@ import type { RowDataPacket } from "mysql2";
 // Q2: Search for a college with a particular program or offering
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const keyword = searchParams.get("keyword") || "";
+  const keyword = searchParams.get("keyword");
+  if (!keyword) {
+    return NextResponse.json({ error: "keyword is required" }, { status: 400 });
+  }
 
   return queryHandler(async (pool) => {
     const [rows] = await pool.query<RowDataPacket[]>(
