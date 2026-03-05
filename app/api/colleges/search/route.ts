@@ -5,7 +5,10 @@ import type { RowDataPacket } from "mysql2";
 // Q1: Find colleges in a particular area and see what programs are available
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
-  const state = searchParams.get("state") || "WA";
+  const state = searchParams.get("state");
+  if (!state) {
+    return NextResponse.json({ error: "state is required" }, { status: 400 });
+  }
   const excludeCity = searchParams.get("excludeCity") || "";
 
   return queryHandler(async (pool) => {
