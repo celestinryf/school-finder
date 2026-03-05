@@ -4,49 +4,53 @@ import type { RowDataPacket } from "mysql2";
 export default async function AnalyticsPage() {
   const pool = getPool();
 
-  const [acceptanceRate] = await pool.query<RowDataPacket[]>(`
-    SELECT a.college_id, c.name, c.campus, a.year,
-           a.applications_received, a.applications_admitted,
-           ROUND(100.0 * a.applications_admitted / NULLIF(a.applications_received, 0), 2) AS acceptance_rate_pct
-    FROM admission_statistics a
-    JOIN colleges c ON c.college_id = a.college_id
-    ORDER BY a.year
-  `);
-
-  const [tuitionGap] = await pool.query<RowDataPacket[]>(`
-    SELECT e.college_id, c.name, c.campus, e.year,
-           e.resident_tuition, e.nonresident_tuition,
-           (e.nonresident_tuition - e.resident_tuition) AS tuition_gap
-    FROM expenses e
-    JOIN colleges c ON c.college_id = e.college_id
-    ORDER BY e.year DESC, tuition_gap DESC
-  `);
-
-  const [demographics] = await pool.query<RowDataPacket[]>(`
-    SELECT x.college_id, c.name, c.campus, x.year, x.ethnicity, x.percent_enrolled
-    FROM ethnicities x
-    JOIN colleges c ON c.college_id = x.college_id
-    WHERE x.percent_enrolled IS NOT NULL
-    ORDER BY x.year DESC, x.college_id, x.percent_enrolled DESC
-  `);
-
-  const [gender] = await pool.query<RowDataPacket[]>(`
-    SELECT g.college_id, c.name, c.campus, g.year,
-           SUM(CASE WHEN g.gender = 'Female' THEN g.percent_enrolled ELSE 0 END) AS female_pct,
-           SUM(CASE WHEN g.gender = 'Male'   THEN g.percent_enrolled ELSE 0 END) AS male_pct,
-           SUM(CASE WHEN g.gender NOT IN ('Female','Male') THEN g.percent_enrolled ELSE 0 END) AS other_pct
-    FROM gender g
-    JOIN colleges c ON c.college_id = g.college_id
-    GROUP BY g.college_id, c.name, c.campus, g.year
-    ORDER BY g.year DESC, g.college_id
-  `);
-
-  const [walkable] = await pool.query<RowDataPacket[]>(`
-    SELECT c.name, c.campus, c.type, c.website_url, w.walk, w.transit, w.bike
-    FROM colleges c
-    JOIN walkscore_stats w ON w.college_id = c.college_id
-    WHERE w.walk > 70 AND w.transit > 70
-  `);
+  const [
+    [acceptanceRate],
+    [tuitionGap],
+    [demographics],
+    [gender],
+    [walkable],
+  ] = await Promise.all([
+    pool.query<RowDataPacket[]>(`
+      SELECT a.college_id, c.name, c.campus, a.year,
+             a.applications_received, a.applications_admitted,
+             ROUND(100.0 * a.applications_admitted / NULLIF(a.applications_received, 0), 2) AS acceptance_rate_pct
+      FROM admission_statistics a
+      JOIN colleges c ON c.college_id = a.college_id
+      ORDER BY a.year
+    `),
+    pool.query<RowDataPacket[]>(`
+      SELECT e.college_id, c.name, c.campus, e.year,
+             e.resident_tuition, e.nonresident_tuition,
+             (e.nonresident_tuition - e.resident_tuition) AS tuition_gap
+      FROM expenses e
+      JOIN colleges c ON c.college_id = e.college_id
+      ORDER BY e.year DESC, tuition_gap DESC
+    `),
+    pool.query<RowDataPacket[]>(`
+      SELECT x.college_id, c.name, c.campus, x.year, x.ethnicity, x.percent_enrolled
+      FROM ethnicities x
+      JOIN colleges c ON c.college_id = x.college_id
+      WHERE x.percent_enrolled IS NOT NULL
+      ORDER BY x.year DESC, x.college_id, x.percent_enrolled DESC
+    `),
+    pool.query<RowDataPacket[]>(`
+      SELECT g.college_id, c.name, c.campus, g.year,
+             SUM(CASE WHEN g.gender = 'Female' THEN g.percent_enrolled ELSE 0 END) AS female_pct,
+             SUM(CASE WHEN g.gender = 'Male'   THEN g.percent_enrolled ELSE 0 END) AS male_pct,
+             SUM(CASE WHEN g.gender NOT IN ('Female','Male') THEN g.percent_enrolled ELSE 0 END) AS other_pct
+      FROM gender g
+      JOIN colleges c ON c.college_id = g.college_id
+      GROUP BY g.college_id, c.name, c.campus, g.year
+      ORDER BY g.year DESC, g.college_id
+    `),
+    pool.query<RowDataPacket[]>(`
+      SELECT c.name, c.campus, c.type, c.website_url, w.walk, w.transit, w.bike
+      FROM colleges c
+      JOIN walkscore_stats w ON w.college_id = c.college_id
+      WHERE w.walk > 70 AND w.transit > 70
+    `),
+  ]);
 
   return (
     <div>
@@ -92,64 +96,72 @@ export default async function AnalyticsPage() {
 
       {/* A2: Tuition Gap */}
       <AnalyticsSection title="Tuition Gap (Nonresident - Resident)">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
-            <tr>
-              <th className="px-3 py-2">College</th>
-              <th className="px-3 py-2">Campus</th>
-              <th className="px-3 py-2">Year</th>
-              <th className="px-3 py-2">Resident</th>
-              <th className="px-3 py-2">Nonresident</th>
-              <th className="px-3 py-2">Gap</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {tuitionGap.map((r, i) => (
-              <tr key={i} className="hover:bg-gray-50">
-                <td className="px-3 py-2">{r.name}</td>
-                <td className="px-3 py-2">{r.campus}</td>
-                <td className="px-3 py-2">{r.year}</td>
-                <td className="px-3 py-2">
-                  ${Number(r.resident_tuition).toLocaleString()}
-                </td>
-                <td className="px-3 py-2">
-                  ${Number(r.nonresident_tuition).toLocaleString()}
-                </td>
-                <td className="px-3 py-2 font-medium text-red-600">
-                  ${Number(r.tuition_gap).toLocaleString()}
-                </td>
+        {tuitionGap.length > 0 ? (
+          <table className="w-full text-left text-sm">
+            <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
+              <tr>
+                <th className="px-3 py-2">College</th>
+                <th className="px-3 py-2">Campus</th>
+                <th className="px-3 py-2">Year</th>
+                <th className="px-3 py-2">Resident</th>
+                <th className="px-3 py-2">Nonresident</th>
+                <th className="px-3 py-2">Gap</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y">
+              {tuitionGap.map((r, i) => (
+                <tr key={i} className="hover:bg-gray-50">
+                  <td className="px-3 py-2">{r.name}</td>
+                  <td className="px-3 py-2">{r.campus}</td>
+                  <td className="px-3 py-2">{r.year}</td>
+                  <td className="px-3 py-2">
+                    ${Number(r.resident_tuition).toLocaleString()}
+                  </td>
+                  <td className="px-3 py-2">
+                    ${Number(r.nonresident_tuition).toLocaleString()}
+                  </td>
+                  <td className="px-3 py-2 font-medium text-red-600">
+                    ${Number(r.tuition_gap).toLocaleString()}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="text-sm text-gray-500">No tuition data available.</p>
+        )}
       </AnalyticsSection>
 
       {/* A3: Demographics */}
       <AnalyticsSection title="Diversity Composition">
-        <table className="w-full text-left text-sm">
-          <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
-            <tr>
-              <th className="px-3 py-2">College</th>
-              <th className="px-3 py-2">Campus</th>
-              <th className="px-3 py-2">Year</th>
-              <th className="px-3 py-2">Ethnicity</th>
-              <th className="px-3 py-2">% Enrolled</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y">
-            {demographics.map((r, i) => (
-              <tr key={i} className="hover:bg-gray-50">
-                <td className="px-3 py-2">{r.name}</td>
-                <td className="px-3 py-2">{r.campus}</td>
-                <td className="px-3 py-2">{r.year}</td>
-                <td className="px-3 py-2">{r.ethnicity}</td>
-                <td className="px-3 py-2 font-medium">
-                  {Number(r.percent_enrolled).toFixed(1)}%
-                </td>
+        {demographics.length > 0 ? (
+          <table className="w-full text-left text-sm">
+            <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
+              <tr>
+                <th className="px-3 py-2">College</th>
+                <th className="px-3 py-2">Campus</th>
+                <th className="px-3 py-2">Year</th>
+                <th className="px-3 py-2">Ethnicity</th>
+                <th className="px-3 py-2">% Enrolled</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y">
+              {demographics.map((r, i) => (
+                <tr key={i} className="hover:bg-gray-50">
+                  <td className="px-3 py-2">{r.name}</td>
+                  <td className="px-3 py-2">{r.campus}</td>
+                  <td className="px-3 py-2">{r.year}</td>
+                  <td className="px-3 py-2">{r.ethnicity}</td>
+                  <td className="px-3 py-2 font-medium">
+                    {Number(r.percent_enrolled).toFixed(1)}%
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        ) : (
+          <p className="text-sm text-gray-500">No demographics data available.</p>
+        )}
       </AnalyticsSection>
 
       {/* A4: Gender Distribution */}

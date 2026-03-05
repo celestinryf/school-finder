@@ -1,4 +1,4 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
 
@@ -9,6 +9,9 @@ export async function GET(
 ) {
   const { id } = await params;
   const collegeId = Number(id);
+  if (!Number.isInteger(collegeId) || collegeId <= 0) {
+    return NextResponse.json({ error: "Invalid college id" }, { status: 400 });
+  }
 
   return queryHandler(async (pool) => {
     const [rows] = await pool.query<RowDataPacket[]>(
