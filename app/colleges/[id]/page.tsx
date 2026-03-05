@@ -37,58 +37,59 @@ export default async function CollegeDetailPage({
   if (colleges.length === 0) return notFound();
   const college = colleges[0];
 
-  // Fetch all sections in parallel
-  const [departments] = await pool.query<RowDataPacket[]>(
-    `SELECT department_id, department_name FROM departments WHERE college_id = ? ORDER BY department_id`,
-    [collegeId]
-  );
-
-  const [programs] = await pool.query<RowDataPacket[]>(
-    `SELECT p.program_id, p.name, p.degree, p.type, p.length, d.department_name
-     FROM programs p
-     JOIN departments d ON d.college_id = p.college_id AND d.department_id = p.department_id
-     WHERE p.college_id = ?
-     ORDER BY d.department_name, p.name`,
-    [collegeId]
-  );
-
-  const maxCost = sp.maxCost ? Number(sp.maxCost) : null;
-  const [parking] = await pool.query<RowDataPacket[]>(
-    `SELECT permit, cost, rate FROM parking_permits
-     WHERE college_id = ? AND (? IS NULL OR cost <= ?)
-     ORDER BY cost ASC, permit`,
-    [collegeId, maxCost, maxCost]
-  );
-
-  const [housing] = await pool.query<RowDataPacket[]>(
-    `SELECT building_name, address, units, is_on_campus FROM housing
-     WHERE college_id = ? ORDER BY is_on_campus DESC, building_name`,
-    [collegeId]
-  );
-
+  const rawMaxCost = sp.maxCost ? Number(sp.maxCost) : null;
+  const maxCost = rawMaxCost !== null && Number.isFinite(rawMaxCost) ? rawMaxCost : null;
   const lastNamePrefix = sp.lastNamePrefix || null;
-  const departmentId = sp.departmentId ? Number(sp.departmentId) : null;
-  const [faculty] = await pool.query<RowDataPacket[]>(
-    `SELECT f.email, f.first_name, f.last_name, f.phone_number, f.teaching_year, d.department_name
-     FROM faculty f
-     JOIN departments d ON d.college_id = f.college_id AND d.department_id = f.department_id
-     WHERE f.college_id = ?
-       AND (? IS NULL OR f.department_id = ?)
-       AND (? IS NULL OR f.last_name LIKE ?)
-     ORDER BY f.last_name, f.first_name`,
-    [
-      collegeId,
-      departmentId,
-      departmentId,
-      lastNamePrefix,
-      lastNamePrefix ? `${lastNamePrefix}%` : null,
-    ]
-  );
+  const rawDeptId = sp.departmentId ? Number(sp.departmentId) : null;
+  const departmentId = rawDeptId !== null && Number.isFinite(rawDeptId) ? rawDeptId : null;
 
-  const [phones] = await pool.query<RowDataPacket[]>(
-    `SELECT phone_number, phone_type FROM college_phones WHERE college_id = ?`,
-    [collegeId]
-  );
+  // Fetch all sections in parallel
+  const [
+    [departments],
+    [programs],
+    [parking],
+    [housing],
+    [faculty],
+    [phones],
+  ] = await Promise.all([
+    pool.query<RowDataPacket[]>(
+      `SELECT department_id, department_name FROM departments WHERE college_id = ? ORDER BY department_id`,
+      [collegeId]
+    ),
+    pool.query<RowDataPacket[]>(
+      `SELECT p.program_id, p.name, p.degree, p.type, p.length, d.department_name
+       FROM programs p
+       JOIN departments d ON d.college_id = p.college_id AND d.department_id = p.department_id
+       WHERE p.college_id = ?
+       ORDER BY d.department_name, p.name`,
+      [collegeId]
+    ),
+    pool.query<RowDataPacket[]>(
+      `SELECT permit, cost, rate FROM parking_permits
+       WHERE college_id = ? AND (? IS NULL OR cost <= ?)
+       ORDER BY cost ASC, permit`,
+      [collegeId, maxCost, maxCost]
+    ),
+    pool.query<RowDataPacket[]>(
+      `SELECT building_name, address, units, is_on_campus FROM housing
+       WHERE college_id = ? ORDER BY is_on_campus DESC, building_name`,
+      [collegeId]
+    ),
+    pool.query<RowDataPacket[]>(
+      `SELECT f.email, f.first_name, f.last_name, f.phone_number, f.teaching_year, d.department_name
+       FROM faculty f
+       JOIN departments d ON d.college_id = f.college_id AND d.department_id = f.department_id
+       WHERE f.college_id = ?
+         AND (? IS NULL OR f.department_id = ?)
+         AND (? IS NULL OR f.last_name LIKE ?)
+       ORDER BY f.last_name, f.first_name`,
+      [collegeId, departmentId, departmentId, lastNamePrefix, lastNamePrefix ? `${lastNamePrefix}%` : null]
+    ),
+    pool.query<RowDataPacket[]>(
+      `SELECT phone_number, phone_type FROM college_phones WHERE college_id = ?`,
+      [collegeId]
+    ),
+  ]);
 
   return (
     <div>
@@ -249,7 +250,7 @@ export default async function CollegeDetailPage({
       {/* Faculty */}
       <Section title="Faculty Directory" count={faculty.length}>
         <Suspense fallback={null}>
-          <FacultySearch collegeId={collegeId} />
+          <FacultySearch collegeId={collegeId} departments={departments as { department_id: number; department_name: string }[]} />
         </Suspense>
         {faculty.length > 0 ? (
           <table className="mt-3 w-full text-left text-sm">

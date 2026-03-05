@@ -3,7 +3,18 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 
-export default function FacultySearch({ collegeId }: { collegeId: number }) {
+interface Department {
+  department_id: number;
+  department_name: string;
+}
+
+export default function FacultySearch({
+  collegeId,
+  departments,
+}: {
+  collegeId: number;
+  departments: Department[];
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [prefix, setPrefix] = useState(
@@ -21,8 +32,8 @@ export default function FacultySearch({ collegeId }: { collegeId: number }) {
     } else {
       params.delete("lastNamePrefix");
     }
-    if (deptId.trim()) {
-      params.set("departmentId", deptId.trim());
+    if (deptId) {
+      params.set("departmentId", deptId);
     } else {
       params.delete("departmentId");
     }
@@ -38,13 +49,18 @@ export default function FacultySearch({ collegeId }: { collegeId: number }) {
         placeholder="Last name starts with..."
         className="w-48 rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
       />
-      <input
-        type="number"
+      <select
         value={deptId}
         onChange={(e) => setDeptId(e.target.value)}
-        placeholder="Dept ID"
-        className="w-24 rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
-      />
+        className="rounded border border-gray-300 px-2 py-1 text-sm focus:border-blue-500 focus:outline-none"
+      >
+        <option value="">All departments</option>
+        {departments.map((d) => (
+          <option key={d.department_id} value={d.department_id}>
+            {d.department_name}
+          </option>
+        ))}
+      </select>
       <button
         type="submit"
         className="rounded bg-blue-600 px-3 py-1 text-sm text-white hover:bg-blue-700"
