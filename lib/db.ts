@@ -13,7 +13,7 @@ export function getPool(): mysql.Pool {
       user: process.env.DATABASE_USER,
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
-      ssl: { rejectUnauthorized: true },
+      ssl: process.env.DATABASE_SSL === "false" ? false : { rejectUnauthorized: true },
       waitForConnections: true,
       connectionLimit: 5,
       queueLimit: 0,
