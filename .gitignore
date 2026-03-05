@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -18,15 +16,16 @@
 # misc
 .DS_Store
 *.pem
+Thumbs.db
 
 # debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# local env files
-.env*.local
-.env
+# local env files (allow only .env.example)
+.env*
+!.env.example
 
 # vercel
 .vercel
@@ -34,3 +33,19 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# IDE / tools
+.vscode/
+.idea/
+.claude/
+*.swp
+*.swo
+
+# OS
+Desktop.ini
+$RECYCLE.BIN/
+
+# SSL certs (if downloaded for TiDB CLI)
+*.crt
+*.key
+*.ca
