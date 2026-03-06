@@ -583,3 +583,184 @@ Select c.name, campus, c.type, c.website_url, walk, transit, bike
 FROM colleges c, walkscore_stats w
 WHERE c.college_id = w.college_id
 AND w.walk > 70 AND w.transit > 70;
+
+-- ============================================================
+-- DML: INSERT / UPDATE / DELETE EXAMPLES
+-- These demonstrate data manipulation for every scenario table.
+-- The web application's /manage page executes these dynamically.
+-- ============================================================
+
+-- ----- Scenario Q1/Q2: colleges + programs + location -----
+
+-- INSERT a new college
+INSERT INTO colleges (college_id, name, campus, type, fscl, website_url)
+VALUES (4, 'Washington State University', 'Pullman', '4-year', '003800', 'https://wsu.edu/');
+
+-- INSERT its location (Q1 uses location for area filtering)
+INSERT INTO location (college_id, street, city, state, postal_code)
+VALUES (4, '100 Dairy Rd', 'Pullman', 'WA', '99164');
+
+-- INSERT a program for the new college (Q2 searches programs)
+INSERT INTO programs (college_id, department_id, program_id, name, degree, type, length)
+VALUES (4, 1, 1, 'Computer Science', 'Bachelors', 'Science', '4 years');
+
+-- UPDATE: change a college's website URL
+UPDATE colleges
+SET website_url = 'https://www.wsu.edu/'
+WHERE college_id = 4;
+
+-- UPDATE: change location city
+UPDATE location
+SET city = 'Pullman', street = '200 Stadium Way'
+WHERE college_id = 4;
+
+-- UPDATE: rename a program
+UPDATE programs
+SET name = 'Computer Science & Engineering'
+WHERE college_id = 4 AND department_id = 1 AND program_id = 1;
+
+-- DELETE: remove the program
+DELETE FROM programs
+WHERE college_id = 4 AND department_id = 1 AND program_id = 1;
+
+-- DELETE: remove the location
+DELETE FROM location
+WHERE college_id = 4;
+
+-- DELETE: remove the college (cascades to dependent rows)
+DELETE FROM colleges
+WHERE college_id = 4;
+
+-- ----- Scenario Q3: parking_permits -----
+
+-- INSERT a parking permit
+INSERT INTO parking_permits (college_id, permit, cost, rate)
+VALUES (1, 'Evening Permit', 50.00, 'Quarterly');
+
+-- UPDATE parking permit cost
+UPDATE parking_permits
+SET cost = 60.00
+WHERE college_id = 1 AND permit = 'Evening Permit';
+
+-- DELETE parking permit
+DELETE FROM parking_permits
+WHERE college_id = 1 AND permit = 'Evening Permit';
+
+-- ----- Scenario Q4: housing -----
+
+-- INSERT a housing option
+INSERT INTO housing (college_id, building_name, address, units, is_on_campus)
+VALUES (1, 'Prairie Line Trail Apts', '1800 S State St', 64, 0);
+
+-- UPDATE housing units
+UPDATE housing
+SET units = 72
+WHERE college_id = 1 AND building_name = 'Prairie Line Trail Apts' AND address = '1800 S State St';
+
+-- DELETE housing option
+DELETE FROM housing
+WHERE college_id = 1 AND building_name = 'Prairie Line Trail Apts' AND address = '1800 S State St';
+
+-- ----- Scenario Q5: departments -----
+
+-- INSERT a department
+INSERT INTO departments (college_id, department_id, department_name)
+VALUES (1, 4, 'School of Urban Studies');
+
+-- UPDATE department name
+UPDATE departments
+SET department_name = 'School of Urban & Environmental Studies'
+WHERE college_id = 1 AND department_id = 4;
+
+-- DELETE department
+DELETE FROM departments
+WHERE college_id = 1 AND department_id = 4;
+
+-- ----- Scenario Q7: faculty -----
+
+-- INSERT a faculty member
+INSERT INTO faculty (email, first_name, last_name, teaching_year, phone_number, college_id, department_id)
+VALUES ('jdoe@uw.edu', 'Jane', 'Doe', 2020, '253-692-9999', 1, 1);
+
+-- UPDATE faculty phone
+UPDATE faculty
+SET phone_number = '253-692-0001'
+WHERE email = 'jdoe@uw.edu';
+
+-- DELETE faculty member
+DELETE FROM faculty
+WHERE email = 'jdoe@uw.edu';
+
+-- ----- Analytical A1: admission_statistics -----
+
+-- INSERT admission stats
+INSERT INTO admission_statistics (college_id, year, applications_received, applications_admitted)
+VALUES (1, 2026, 3500, 2900);
+
+-- UPDATE admission stats
+UPDATE admission_statistics
+SET applications_admitted = 2950
+WHERE college_id = 1 AND year = 2026;
+
+-- DELETE admission stats
+DELETE FROM admission_statistics
+WHERE college_id = 1 AND year = 2026;
+
+-- ----- Analytical A2: expenses -----
+
+-- INSERT expense row
+INSERT INTO expenses (college_id, year, resident_tuition, nonresident_tuition, books_supplies)
+VALUES (1, 2026, 14000.00, 46000.00, 950.00);
+
+-- UPDATE tuition
+UPDATE expenses
+SET resident_tuition = 14200.00, nonresident_tuition = 46500.00
+WHERE college_id = 1 AND year = 2026;
+
+-- DELETE expense row
+DELETE FROM expenses
+WHERE college_id = 1 AND year = 2026;
+
+-- ----- Analytical A3: ethnicities -----
+
+-- INSERT ethnicity data
+INSERT INTO ethnicities (college_id, year, ethnicity, percent_enrolled)
+VALUES (1, 2026, 'White', 37.00);
+
+-- UPDATE percent enrolled
+UPDATE ethnicities
+SET percent_enrolled = 36.50
+WHERE college_id = 1 AND year = 2026 AND ethnicity = 'White';
+
+-- DELETE ethnicity data
+DELETE FROM ethnicities
+WHERE college_id = 1 AND year = 2026 AND ethnicity = 'White';
+
+-- ----- Analytical A4: gender -----
+
+-- INSERT gender data
+INSERT INTO gender (college_id, year, gender, percent_enrolled)
+VALUES (1, 2026, 'Female', 52.00);
+
+-- UPDATE gender percent
+UPDATE gender
+SET percent_enrolled = 52.50
+WHERE college_id = 1 AND year = 2026 AND gender = 'Female';
+
+-- DELETE gender data
+DELETE FROM gender
+WHERE college_id = 1 AND year = 2026 AND gender = 'Female';
+
+-- ----- Analytical A5: walkscore_stats -----
+
+-- INSERT walkscore (using a hypothetical college_id=4 if it existed)
+-- Since college_id=4 was deleted above, demonstrate with existing college_id=1
+-- UPDATE walk score
+UPDATE walkscore_stats
+SET walk = 85, transit = 70
+WHERE college_id = 1;
+
+-- Restore original values
+UPDATE walkscore_stats
+SET walk = 84, transit = NULL
+WHERE college_id = 1;
