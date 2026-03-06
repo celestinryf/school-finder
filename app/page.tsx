@@ -68,7 +68,7 @@ export default async function HomePage({
         College Finder
       </h1>
       <p className="mb-6 text-gray-600">
-        Explore {colleges.length} campuses. Search by college or program name.
+        Explore {colleges.length} campuses. Search by college, program name or city.
       </p>
 
       <Suspense fallback={null}>
