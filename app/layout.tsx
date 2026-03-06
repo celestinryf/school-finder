@@ -43,6 +43,12 @@ export default function RootLayout({
               >
                 Analytics
               </Link>
+              <Link
+                href="/manage"
+                className="text-gray-600 hover:text-gray-900"
+              >
+                Manage
+              </Link>
             </div>
           </div>
         </nav>
