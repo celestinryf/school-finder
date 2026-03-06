@@ -46,9 +46,9 @@ async function searchPrograms(keyword: string): Promise<ProgramResult[]> {
     `SELECT c.name, c.campus, c.type, p.name AS program_name, p.degree, p.type AS program_type
      FROM colleges c
      JOIN programs p ON p.college_id = c.college_id
-     WHERE p.name LIKE ?
+     WHERE p.name LIKE ? OR c.name LIKE ? OR c.campus LIKE ?
      ORDER BY c.name, c.campus, p.name`,
-    [`%${keyword}%`]
+    [`%${keyword}%`, `%${keyword}%`, `%${keyword}%`]
   );
   return rows;
 }
@@ -68,7 +68,7 @@ export default async function HomePage({
         College Finder
       </h1>
       <p className="mb-6 text-gray-600">
-        Explore {colleges.length} campuses. Search by program below.
+        Explore {colleges.length} campuses. Search by college or program name.
       </p>
 
       <Suspense fallback={null}>
@@ -78,7 +78,7 @@ export default async function HomePage({
       {programResults && (
         <div className="mt-6">
           <h2 className="mb-3 text-lg font-semibold text-gray-800">
-            Programs matching &quot;{keyword}&quot; ({programResults.length}{" "}
+            Results for &quot;{keyword}&quot; ({programResults.length}{" "}
             results)
           </h2>
           {programResults.length > 0 ? (
