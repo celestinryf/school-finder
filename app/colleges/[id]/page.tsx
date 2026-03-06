@@ -165,7 +165,7 @@ export default async function CollegeDetailPage({
       {/* Programs */}
       <Section title="Programs" count={programs.length}>
         <table className="w-full text-left text-sm">
-          <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
+          <thead className="border-b bg-gray-100 text-xs uppercase text-gray-600">
             <tr>
               <th className="px-3 py-2">Program</th>
               <th className="px-3 py-2">Degree</th>
@@ -175,7 +175,7 @@ export default async function CollegeDetailPage({
           </thead>
           <tbody className="divide-y">
             {programs.map((p, i) => (
-              <tr key={i} className="hover:bg-gray-50">
+              <tr key={i} className="hover:bg-gray-100">
                 <td className="px-3 py-2 font-medium">{p.name}</td>
                 <td className="px-3 py-2">{p.degree}</td>
                 <td className="px-3 py-2">{p.type}</td>
@@ -195,7 +195,7 @@ export default async function CollegeDetailPage({
         </Suspense>
         {parking.length > 0 ? (
           <table className="mt-3 w-full text-left text-sm">
-            <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
+            <thead className="border-b bg-gray-100 text-xs uppercase text-gray-600">
               <tr>
                 <th className="px-3 py-2">Permit</th>
                 <th className="px-3 py-2">Cost</th>
@@ -204,7 +204,7 @@ export default async function CollegeDetailPage({
             </thead>
             <tbody className="divide-y">
               {parking.map((p, i) => (
-                <tr key={i} className="hover:bg-gray-50">
+                <tr key={i} className="hover:bg-gray-100">
                   <td className="px-3 py-2">{p.permit}</td>
                   <td className="px-3 py-2">${Number(p.cost).toFixed(2)}</td>
                   <td className="px-3 py-2">{p.rate}</td>
@@ -223,7 +223,7 @@ export default async function CollegeDetailPage({
       <Section title="Housing" count={housing.length}>
         {housing.length > 0 ? (
           <table className="w-full text-left text-sm">
-            <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
+            <thead className="border-b bg-gray-100 text-xs uppercase text-gray-600">
               <tr>
                 <th className="px-3 py-2">Building</th>
                 <th className="px-3 py-2">Address</th>
@@ -233,7 +233,7 @@ export default async function CollegeDetailPage({
             </thead>
             <tbody className="divide-y">
               {housing.map((h, i) => (
-                <tr key={i} className="hover:bg-gray-50">
+                <tr key={i} className="hover:bg-gray-100">
                   <td className="px-3 py-2 font-medium">{h.building_name}</td>
                   <td className="px-3 py-2">{h.address}</td>
                   <td className="px-3 py-2">{h.units ?? "—"}</td>
@@ -254,7 +254,7 @@ export default async function CollegeDetailPage({
         </Suspense>
         {faculty.length > 0 ? (
           <table className="mt-3 w-full text-left text-sm">
-            <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
+            <thead className="border-b bg-gray-100 text-xs uppercase text-gray-600">
               <tr>
                 <th className="px-3 py-2">Name</th>
                 <th className="px-3 py-2">Email</th>
@@ -264,7 +264,7 @@ export default async function CollegeDetailPage({
             </thead>
             <tbody className="divide-y">
               {faculty.map((f) => (
-                <tr key={f.email} className="hover:bg-gray-50">
+                <tr key={f.email} className="hover:bg-gray-100">
                   <td className="px-3 py-2 font-medium">
                     {f.first_name} {f.last_name}
                   </td>
@@ -295,7 +295,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="mb-8">
+    <section className="mb-6 rounded-lg border border-gray-200 bg-white p-5">
       <h2 className="mb-3 text-lg font-semibold text-gray-800">
         {title}{" "}
         <span className="text-sm font-normal text-gray-400">({count})</span>
