@@ -42,6 +42,7 @@ export default function ManagePage() {
     setEditingRow(null);
     setShowInsert(false);
     setSuccess(null);
+    setPendingDeleteKey(null);
     return () => controller.abort();
   }, [fetchRows]);
 
@@ -288,8 +289,8 @@ export default function ManagePage() {
 function getRowKey(table: TableDef, row: Row): string {
   return table.columns
     .filter((c) => c.pk)
-    .map((c) => String(row[c.name] ?? ""))
-    .join("|");
+    .map((c) => encodeURIComponent(String(row[c.name] ?? "")))
+    .join("\0");
 }
 
 function formatCell(col: ColumnDef, value: unknown): string {

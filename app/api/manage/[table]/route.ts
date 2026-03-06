@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
+import { TABLE_CONFIGS } from "@/lib/table-config";
 import type { RowDataPacket, ResultSetHeader } from "mysql2";
 
 type Body = Record<string, unknown>;
@@ -25,6 +26,24 @@ function requireFields(body: Body, fields: string[]): string | null {
 function requireParams(sp: URLSearchParams, names: string[]): string | null {
   const missing = names.filter((n) => !sp.get(n));
   return missing.length > 0 ? `Missing required params: ${missing.join(", ")}` : null;
+}
+
+function validateBounds(tableKey: string, body: Body): string | null {
+  const config = TABLE_CONFIGS.find((t) => t.key === tableKey);
+  if (!config) return null;
+  for (const col of config.columns) {
+    const val = body[col.name];
+    if (val === null || val === undefined || val === "") continue;
+    const num = Number(val);
+    if (isNaN(num)) continue;
+    if (col.min !== undefined && num < col.min) {
+      return `${col.label} must be at least ${col.min}`;
+    }
+    if (col.max !== undefined && num > col.max) {
+      return `${col.label} must be at most ${col.max}`;
+    }
+  }
+  return null;
 }
 
 // ============================================================
@@ -263,7 +282,7 @@ export async function GET(
 
   try {
     const url = new URL(req.url);
-    const limit = Math.min(Number(url.searchParams.get("limit")) || DEFAULT_LIMIT, 1000);
+    const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || DEFAULT_LIMIT, 1), 1000);
     const offset = Math.max(Number(url.searchParams.get("offset")) || 0, 0);
 
     const pool = getPool();
@@ -286,6 +305,8 @@ export async function POST(
     const body = await req.json();
     const missing = requireFields(body, t.insertRequired);
     if (missing) return NextResponse.json({ error: missing }, { status: 400 });
+    const outOfRange = validateBounds(table, body);
+    if (outOfRange) return NextResponse.json({ error: outOfRange }, { status: 400 });
 
     const pool = getPool();
     const [result] = await pool.query<ResultSetHeader>(t.insert, t.insertParams(body));
@@ -307,6 +328,8 @@ export async function PUT(
     const body = await req.json();
     const missing = requireFields(body, t.updateRequired);
     if (missing) return NextResponse.json({ error: missing }, { status: 400 });
+    const outOfRange = validateBounds(table, body);
+    if (outOfRange) return NextResponse.json({ error: outOfRange }, { status: 400 });
 
     const pool = getPool();
     const [result] = await pool.query<ResultSetHeader>(t.update, t.updateParams(body));
