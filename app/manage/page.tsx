@@ -16,11 +16,11 @@ export default function ManagePage() {
   const [showInsert, setShowInsert] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const fetchRows = useCallback(async () => {
+  const fetchRows = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(`/api/manage/${selectedTable.key}`);
+      const res = await fetch(`/api/manage/${selectedTable.key}`, { signal });
       if (!res.ok) {
         const data = await res.json();
         throw new Error(data.error || "Failed to fetch");
@@ -28,6 +28,7 @@ export default function ManagePage() {
       const data = await res.json();
       setRows(data);
     } catch (e: unknown) {
+      if (e instanceof DOMException && e.name === "AbortError") return;
       setError(e instanceof Error ? e.message : "Failed to fetch rows");
     } finally {
       setLoading(false);
@@ -35,10 +36,12 @@ export default function ManagePage() {
   }, [selectedTable.key]);
 
   useEffect(() => {
-    fetchRows();
+    const controller = new AbortController();
+    fetchRows(controller.signal);
     setEditingRow(null);
     setShowInsert(false);
     setSuccess(null);
+    return () => controller.abort();
   }, [fetchRows]);
 
   function flash(msg: string) {
@@ -296,6 +299,7 @@ function RowForm({
     }
     return init;
   });
+  const [formError, setFormError] = useState<string | null>(null);
 
   function handleChange(colName: string, value: string) {
     setFormData((prev) => ({ ...prev, [colName]: value }));
@@ -303,15 +307,34 @@ function RowForm({
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setFormError(null);
     const cleaned: Row = {};
     for (const col of columns) {
       const val = formData[col.name];
       if (val === "" || val === null || val === undefined) {
         cleaned[col.name] = null;
       } else if (col.type === "int" || col.type === "tinyint") {
-        cleaned[col.name] = parseInt(String(val), 10);
+        const parsed = parseInt(String(val), 10);
+        if (isNaN(parsed)) {
+          if (col.required) {
+            setFormError(`${col.label} must be a valid number`);
+            return;
+          }
+          cleaned[col.name] = null;
+        } else {
+          cleaned[col.name] = parsed;
+        }
       } else if (col.type === "decimal") {
-        cleaned[col.name] = parseFloat(String(val));
+        const parsed = parseFloat(String(val));
+        if (isNaN(parsed)) {
+          if (col.required) {
+            setFormError(`${col.label} must be a valid number`);
+            return;
+          }
+          cleaned[col.name] = null;
+        } else {
+          cleaned[col.name] = parsed;
+        }
       } else {
         cleaned[col.name] = val;
       }
@@ -322,6 +345,11 @@ function RowForm({
   return (
     <form onSubmit={handleSubmit} className="mb-6 rounded-lg border border-gray-200 bg-gray-50 p-4">
       <h3 className="mb-3 text-sm font-semibold text-gray-700">{submitLabel} Row</h3>
+      {formError && (
+        <div className="mb-3 rounded-md border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          {formError}
+        </div>
+      )}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {columns.map((col) => {
           const isReadOnly = pkReadOnly && col.pk;
