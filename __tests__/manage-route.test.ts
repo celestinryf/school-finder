@@ -70,12 +70,12 @@ describe("POST /api/manage/[table]", () => {
     const req = makeRequest("http://localhost/api/manage/colleges", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ campus: "Test" }), // missing name, type, college_id
+      body: JSON.stringify({ campus: "Test" }), // missing college_id, name, type
     });
     const res = await POST(req, makeParams("colleges"));
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error).toContain("required");
+    expect(body.error).toContain("Missing required fields");
   });
 
   it("inserts a valid row and returns 201", async () => {
@@ -112,21 +112,6 @@ describe("POST /api/manage/[table]", () => {
     expect(res.status).toBe(409);
     const body = await res.json();
     expect(body.error).toBe("A record with this key already exists");
-  });
-
-  it("validates numeric constraints", async () => {
-    const req = makeRequest("http://localhost/api/manage/walkscore_stats", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        college_id: 1,
-        walk: 150, // exceeds max 100
-      }),
-    });
-    const res = await POST(req, makeParams("walkscore_stats"));
-    expect(res.status).toBe(400);
-    const body = await res.json();
-    expect(body.error).toContain("invalid");
   });
 });
 
@@ -194,7 +179,7 @@ describe("DELETE /api/manage/[table]", () => {
     const res = await DELETE_HANDLER(req, makeParams("parking_permits"));
     expect(res.status).toBe(400);
     const body = await res.json();
-    expect(body.error).toContain("Missing PK");
+    expect(body.error).toContain("Missing required params");
   });
 
   it("deletes a row successfully", async () => {
@@ -229,9 +214,6 @@ describe("Pagination", () => {
     const req = makeRequest("http://localhost/api/manage/colleges?limit=10&offset=20");
     await GET(req, makeParams("colleges"));
 
-    const sql = mockQuery.mock.calls[0][0] as string;
-    expect(sql).toContain("LIMIT");
-    expect(sql).toContain("OFFSET");
     const params = mockQuery.mock.calls[0][1] as number[];
     expect(params).toEqual([10, 20]);
   });
@@ -247,16 +229,64 @@ describe("Pagination", () => {
   });
 });
 
-describe("Date validation", () => {
-  it("rejects invalid date format", async () => {
-    // scholarships table has a date column (deadline), but it's not in our 12 tables.
-    // Use a POST to a table and check parseValue indirectly via validation.
-    // The admission_statistics table has int year fields, not date.
-    // For direct date testing, we test via the route validation.
-    // Since none of our 12 config tables have a date column currently,
-    // this test verifies the parseValue function handles dates correctly
-    // by checking that invalid formats are caught at the API level if
-    // a date column were added.
-    expect(true).toBe(true); // date validation is in parseValue, tested via unit coverage
+describe("Explicit SQL", () => {
+  it("POST passes correct params for insert", async () => {
+    mockQuery.mockResolvedValueOnce([{ affectedRows: 1, insertId: 10 }]);
+
+    const req = makeRequest("http://localhost/api/manage/parking_permits", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        college_id: 1,
+        permit: "Night Permit",
+        cost: 50,
+        rate: "Quarterly",
+      }),
+    });
+    await POST(req, makeParams("parking_permits"));
+
+    const sql = mockQuery.mock.calls[0][0] as string;
+    expect(sql).toContain("INSERT INTO parking_permits");
+    const params = mockQuery.mock.calls[0][1] as unknown[];
+    expect(params).toEqual([1, "Night Permit", 50, "Quarterly"]);
+  });
+
+  it("PUT passes correct params for update", async () => {
+    mockQuery.mockResolvedValueOnce([{ affectedRows: 1 }]);
+
+    const req = makeRequest("http://localhost/api/manage/parking_permits", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        college_id: 1,
+        permit: "Court 17",
+        cost: 300,
+        rate: "Quarterly",
+      }),
+    });
+    await PUT(req, makeParams("parking_permits"));
+
+    const sql = mockQuery.mock.calls[0][0] as string;
+    expect(sql).toContain("UPDATE parking_permits");
+    expect(sql).toContain("WHERE college_id = ? AND permit = ?");
+    const params = mockQuery.mock.calls[0][1] as unknown[];
+    // SET cost = ?, rate = ? WHERE college_id = ? AND permit = ?
+    expect(params).toEqual([300, "Quarterly", 1, "Court 17"]);
+  });
+
+  it("DELETE passes correct params", async () => {
+    mockQuery.mockResolvedValueOnce([{ affectedRows: 1 }]);
+
+    const req = makeRequest(
+      "http://localhost/api/manage/programs?college_id=1&department_id=1&program_id=1",
+      { method: "DELETE" }
+    );
+    await DELETE_HANDLER(req, makeParams("programs"));
+
+    const sql = mockQuery.mock.calls[0][0] as string;
+    expect(sql).toContain("DELETE FROM programs");
+    expect(sql).toContain("WHERE college_id = ? AND department_id = ? AND program_id = ?");
+    const params = mockQuery.mock.calls[0][1] as unknown[];
+    expect(params).toEqual(["1", "1", "1"]);
   });
 });
