@@ -84,7 +84,7 @@ export default async function HomePage({
           {programResults.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm">
-                <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
+                <thead className="border-b bg-gray-100 text-xs uppercase text-gray-600">
                   <tr>
                     <th className="px-3 py-2">College</th>
                     <th className="px-3 py-2">Campus</th>
@@ -95,7 +95,7 @@ export default async function HomePage({
                 </thead>
                 <tbody className="divide-y">
                   {programResults.map((r, i) => (
-                    <tr key={i} className="hover:bg-gray-50">
+                    <tr key={i} className="hover:bg-gray-100">
                       <td className="px-3 py-2">{r.name}</td>
                       <td className="px-3 py-2">{r.campus}</td>
                       <td className="px-3 py-2 font-medium">
