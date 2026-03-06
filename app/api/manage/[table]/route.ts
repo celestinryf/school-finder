@@ -31,7 +31,10 @@ function parseValue(col: ColumnDef, raw: unknown): unknown {
       if (col.max !== undefined && n > col.max) return undefined;
       return n;
     }
-    case "date":
+    case "date": {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(str)) return undefined;
+      return str;
+    }
     case "varchar":
       return str;
   }
