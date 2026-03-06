@@ -45,7 +45,6 @@ function validateBody(columns: ColumnDef[], body: Record<string, unknown>, pkOnl
     if (pkOnly && !col.pk) continue;
     const raw = body[col.name];
     if ((raw === null || raw === undefined || raw === "") && col.required) {
-      if (pkOnly && !col.pk) continue;
       errors.push(`${col.label} is required`);
       continue;
     }
