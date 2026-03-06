@@ -115,8 +115,8 @@ export const TABLE_CONFIGS: TableDef[] = [
     columns: [
       { name: "college_id", label: "College", type: "int", required: true, pk: true },
       { name: "year", label: "Year", type: "int", required: true, pk: true, min: 1 },
-      { name: "applications_received", label: "Apps Received", type: "int", required: false, pk: false, min: 1 },
-      { name: "applications_admitted", label: "Apps Admitted", type: "int", required: false, pk: false, min: 1 },
+      { name: "applications_received", label: "Apps Received", type: "int", required: false, pk: false, min: 0 },
+      { name: "applications_admitted", label: "Apps Admitted", type: "int", required: false, pk: false, min: 0 },
     ],
   },
   {

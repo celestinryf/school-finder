@@ -14,6 +14,7 @@ export default function ManagePage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [editingRow, setEditingRow] = useState<Row | null>(null);
   const [showInsert, setShowInsert] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const fetchRows = useCallback(async () => {
     setLoading(true);
@@ -46,6 +47,8 @@ export default function ManagePage() {
   }
 
   async function handleInsert(formData: Row) {
+    if (submitting) return;
+    setSubmitting(true);
     setError(null);
     try {
       const res = await fetch(`/api/manage/${selectedTable.key}`, {
@@ -62,10 +65,14 @@ export default function ManagePage() {
       fetchRows();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Insert failed");
+    } finally {
+      setSubmitting(false);
     }
   }
 
   async function handleUpdate(formData: Row) {
+    if (submitting) return;
+    setSubmitting(true);
     setError(null);
     try {
       const res = await fetch(`/api/manage/${selectedTable.key}`, {
@@ -82,11 +89,15 @@ export default function ManagePage() {
       fetchRows();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Update failed");
+    } finally {
+      setSubmitting(false);
     }
   }
 
   async function handleDelete(row: Row) {
+    if (submitting) return;
     if (!confirm("Are you sure you want to delete this row?")) return;
+    setSubmitting(true);
     setError(null);
     try {
       const pkCols = selectedTable.columns.filter((c) => c.pk);
@@ -105,6 +116,8 @@ export default function ManagePage() {
       fetchRows();
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : "Delete failed");
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -171,6 +184,7 @@ export default function ManagePage() {
           onSubmit={handleInsert}
           onCancel={() => setShowInsert(false)}
           submitLabel="Insert"
+          disabled={submitting}
         />
       )}
 
@@ -184,6 +198,7 @@ export default function ManagePage() {
           onCancel={() => setEditingRow(null)}
           submitLabel="Update"
           pkReadOnly
+          disabled={submitting}
         />
       )}
 
@@ -264,6 +279,7 @@ function RowForm({
   onCancel,
   submitLabel,
   pkReadOnly = false,
+  disabled = false,
 }: {
   columns: ColumnDef[];
   initialValues?: Row;
@@ -271,6 +287,7 @@ function RowForm({
   onCancel: () => void;
   submitLabel: string;
   pkReadOnly?: boolean;
+  disabled?: boolean;
 }) {
   const [formData, setFormData] = useState<Row>(() => {
     const init: Row = {};
@@ -289,7 +306,15 @@ function RowForm({
     const cleaned: Row = {};
     for (const col of columns) {
       const val = formData[col.name];
-      cleaned[col.name] = val === "" ? null : val;
+      if (val === "" || val === null || val === undefined) {
+        cleaned[col.name] = null;
+      } else if (col.type === "int" || col.type === "tinyint") {
+        cleaned[col.name] = parseInt(String(val), 10);
+      } else if (col.type === "decimal") {
+        cleaned[col.name] = parseFloat(String(val));
+      } else {
+        cleaned[col.name] = val;
+      }
     }
     onSubmit(cleaned);
   }
@@ -338,9 +363,10 @@ function RowForm({
       <div className="mt-4 flex gap-2">
         <button
           type="submit"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          disabled={disabled}
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
         >
-          {submitLabel}
+          {disabled ? "Saving..." : submitLabel}
         </button>
         <button
           type="button"
