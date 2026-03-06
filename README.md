@@ -9,7 +9,7 @@ Built by **Celestin Ryf** and **Preston Sia**.
 ## Roles
 
 - **Celestin Ryf && Preston Sia** — Project lead and developer. Designed the normalized database schema (18 tables), wrote all SQL (DDL, DML, 12 queries), set up TiDB Serverless hosting, and directed the architecture, feature scope, and workflow for the web application. Reviews and approves all code before it merges.
-- **Claude (AI Assistant)** — Implementation partner. Wrote the Next.js application code (API routes, connection pool, seed script, frontend) under Celestin & Preston's direction. Every change goes through a branch-and-PR workflow and is reviewed before merging. Claude does not make architectural or scope decisions independently.
+- **Claude (AI Assistant)** — Implementation partner. Wrote the Next.js application code (API routes, seed script, frontend) under Celestin & Preston's direction. Every change goes through a branch-and-PR workflow and is reviewed before merging. Claude does not make architectural or scope decisions independently.
 - **Greptile (AI Code Reviewer)** — Automated code reviewer on GitHub pull requests. Analyzes each PR for bugs, security issues, and best practices. Greptile's feedback is triaged by Celestin and Preston and fixed before merging. Examples of issues caught: connection pool leaks during HMR, error messages leaking database credentials, hardcoded values that should use environment variables.
 
 ## Features
