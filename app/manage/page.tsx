@@ -15,6 +15,7 @@ export default function ManagePage() {
   const [editingRow, setEditingRow] = useState<Row | null>(null);
   const [showInsert, setShowInsert] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [pendingDeleteKey, setPendingDeleteKey] = useState<string | null>(null);
 
   const fetchRows = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -99,7 +100,12 @@ export default function ManagePage() {
 
   async function handleDelete(row: Row) {
     if (submitting) return;
-    if (!confirm("Are you sure you want to delete this row?")) return;
+    const rowKey = getRowKey(selectedTable, row);
+    if (pendingDeleteKey !== rowKey) {
+      setPendingDeleteKey(rowKey);
+      return;
+    }
+    setPendingDeleteKey(null);
     setSubmitting(true);
     setError(null);
     try {
@@ -183,6 +189,7 @@ export default function ManagePage() {
       {/* Insert form */}
       {showInsert && (
         <RowForm
+          key={`insert-${selectedTable.key}`}
           columns={selectedTable.columns}
           onSubmit={handleInsert}
           onCancel={() => setShowInsert(false)}
@@ -242,12 +249,29 @@ export default function ManagePage() {
                         >
                           Edit
                         </button>
-                        <button
-                          onClick={() => handleDelete(row)}
-                          className="rounded bg-red-100 px-2 py-1 text-xs text-red-700 hover:bg-red-200"
-                        >
-                          Delete
-                        </button>
+                        {pendingDeleteKey === getRowKey(selectedTable, row) ? (
+                          <>
+                            <button
+                              onClick={() => handleDelete(row)}
+                              className="rounded bg-red-600 px-2 py-1 text-xs text-white hover:bg-red-700"
+                            >
+                              Confirm
+                            </button>
+                            <button
+                              onClick={() => setPendingDeleteKey(null)}
+                              className="rounded bg-gray-100 px-2 py-1 text-xs text-gray-700 hover:bg-gray-200"
+                            >
+                              Cancel
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => handleDelete(row)}
+                            className="rounded bg-red-100 px-2 py-1 text-xs text-red-700 hover:bg-red-200"
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -373,7 +397,7 @@ function RowForm({
                 </select>
               ) : (
                 <input
-                  type={col.type === "int" || col.type === "decimal" ? "number" : "text"}
+                  type={col.type === "int" || col.type === "decimal" ? "number" : col.type === "date" ? "date" : "text"}
                   step={col.type === "decimal" ? "0.01" : undefined}
                   min={col.min}
                   max={col.max}
