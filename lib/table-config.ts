@@ -21,6 +21,14 @@ export interface TableDef {
   scenarios: string[];
 }
 
+export const TABLE_KEYS = [
+  "colleges", "location", "departments", "programs", "faculty",
+  "parking_permits", "housing", "admission_statistics", "expenses",
+  "ethnicities", "gender", "walkscore_stats",
+] as const;
+
+export type TableKey = (typeof TABLE_KEYS)[number];
+
 export const TABLE_CONFIGS: TableDef[] = [
   {
     key: "colleges",

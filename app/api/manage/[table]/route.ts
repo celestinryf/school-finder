@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
-import { TABLE_CONFIGS } from "@/lib/table-config";
+import { TABLE_CONFIGS, type TableKey } from "@/lib/table-config";
 import type { RowDataPacket, ResultSetHeader } from "mysql2";
 
 type Body = Record<string, unknown>;
@@ -9,12 +9,15 @@ const DEFAULT_LIMIT = 500;
 
 function errorResponse(error: unknown) {
   const isDuplicate = error instanceof Error && error.message.includes("Duplicate entry");
-  const status = isDuplicate ? 409 : 500;
+  const isJsonParse = error instanceof SyntaxError;
+  const status = isDuplicate ? 409 : isJsonParse ? 400 : 500;
   const message = isDuplicate
     ? "A record with this key already exists"
-    : process.env.NODE_ENV === "development" && error instanceof Error
-      ? error.message
-      : "Internal server error";
+    : isJsonParse
+      ? "Invalid JSON in request body"
+      : process.env.NODE_ENV === "development" && error instanceof Error
+        ? error.message
+        : "Internal server error";
   return NextResponse.json({ error: message }, { status });
 }
 
@@ -46,11 +49,15 @@ function validateBounds(tableKey: string, body: Body): string | null {
   return null;
 }
 
+function isTableKey(key: string): key is TableKey {
+  return key in TABLES;
+}
+
 // ============================================================
 // Explicit SQL templates for each table
 // ============================================================
 
-const TABLES: Record<string, {
+const TABLES: Record<TableKey, {
   select: string;
   insert: string;
   insertParams: (b: Body) => unknown[];
@@ -277,8 +284,8 @@ export async function GET(
   { params }: { params: Promise<{ table: string }> }
 ) {
   const { table } = await params;
+  if (!isTableKey(table)) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
   const t = TABLES[table];
-  if (!t) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
 
   try {
     const url = new URL(req.url);
@@ -298,8 +305,8 @@ export async function POST(
   { params }: { params: Promise<{ table: string }> }
 ) {
   const { table } = await params;
+  if (!isTableKey(table)) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
   const t = TABLES[table];
-  if (!t) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
 
   try {
     const body = await req.json();
@@ -321,8 +328,8 @@ export async function PUT(
   { params }: { params: Promise<{ table: string }> }
 ) {
   const { table } = await params;
+  if (!isTableKey(table)) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
   const t = TABLES[table];
-  if (!t) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
 
   try {
     const body = await req.json();
@@ -347,8 +354,8 @@ export async function DELETE(
   { params }: { params: Promise<{ table: string }> }
 ) {
   const { table } = await params;
+  if (!isTableKey(table)) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
   const t = TABLES[table];
-  if (!t) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
 
   try {
     const url = new URL(req.url);

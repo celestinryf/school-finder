@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { TABLE_CONFIGS } from "@/lib/table-config";
 import type { TableDef, ColumnDef } from "@/lib/table-config";
 
@@ -16,6 +16,7 @@ export default function ManagePage() {
   const [showInsert, setShowInsert] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [pendingDeleteKey, setPendingDeleteKey] = useState<string | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout>>(null);
 
   const fetchRows = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -47,8 +48,9 @@ export default function ManagePage() {
   }, [fetchRows]);
 
   function flash(msg: string) {
+    if (flashTimer.current) clearTimeout(flashTimer.current);
     setSuccess(msg);
-    setTimeout(() => setSuccess(null), 3000);
+    flashTimer.current = setTimeout(() => setSuccess(null), 3000);
   }
 
   async function handleInsert(formData: Row) {
