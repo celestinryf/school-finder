@@ -26,7 +26,7 @@ export default function SearchForm() {
         type="text"
         value={keyword}
         onChange={(e) => setKeyword(e.target.value)}
-        placeholder="Search programs (e.g. Computer, Business)..."
+        placeholder="Search by college or program name..."
         className="flex-1 rounded border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none"
       />
       <button
