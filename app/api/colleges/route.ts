@@ -1,3 +1,7 @@
+/**
+ * List all colleges with location and walkscore data.
+ * Params: none. Returns: array of colleges with city, state, walk/transit/bike scores.
+ */
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
 

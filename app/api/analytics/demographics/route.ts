@@ -1,8 +1,10 @@
+/**
+ * A3: Diversity composition — ethnicity breakdown per college-year.
+ * Params: collegeId (optional query). Returns: rows with ethnicity and percent_enrolled, ordered by percent desc.
+ */
 import { NextRequest } from "next/server";
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
-
-// A3: Diversity composition: top ethnicities per college-year
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const collegeId = searchParams.get("collegeId")

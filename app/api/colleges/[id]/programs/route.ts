@@ -1,8 +1,10 @@
+/**
+ * Q6: List programs for a college, optionally filtered by department or degree.
+ * Params: id (path), departmentId (optional query), degree (optional query). Returns: array of programs.
+ */
 import { NextRequest } from "next/server";
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
-
-// Q6: List programs for a department (with basic filters)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

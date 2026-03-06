@@ -1,3 +1,7 @@
+/**
+ * Health check endpoint. Pings the database with SELECT 1.
+ * Params: none. Returns: { status, result } on success, { status, message } on error.
+ */
 import { NextResponse } from "next/server";
 import { getPool } from "@/lib/db";
 

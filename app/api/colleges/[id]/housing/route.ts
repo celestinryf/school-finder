@@ -1,8 +1,10 @@
+/**
+ * Q4: List housing options for a college, sorted with on-campus first.
+ * Params: id (path, required). Returns: array of housing buildings with address, units, on-campus flag.
+ */
 import { NextRequest } from "next/server";
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
-
-// Q4: List housing options for a college (on-campus first)
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

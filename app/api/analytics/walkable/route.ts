@@ -1,7 +1,9 @@
+/**
+ * A5: Find colleges that are highly walkable and transit-accessible (walk > 70 and transit > 70).
+ * Params: none. Returns: matching colleges with walk, transit, and bike scores.
+ */
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
-
-// A5: Find colleges which are highly walkable and transit accessible (score >70)
 export async function GET() {
   return queryHandler(async (pool) => {
     const [rows] = await pool.query<RowDataPacket[]>(

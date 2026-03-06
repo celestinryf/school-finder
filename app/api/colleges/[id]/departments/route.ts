@@ -1,8 +1,10 @@
+/**
+ * Q5: List departments (schools) for a college.
+ * Params: id (path, required). Returns: array of { department_id, department_name }.
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
-
-// Q5: List departments (schools) for a college
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

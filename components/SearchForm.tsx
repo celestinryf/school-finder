@@ -1,3 +1,10 @@
+/**
+ * College/program keyword search form.
+ *
+ * Syncs the search term to the `keyword` URL query parameter so the server
+ * component on the home page can read it and filter results. Initializes
+ * from the current URL so the input stays populated on page refresh.
+ */
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -8,6 +15,7 @@ export default function SearchForm() {
   const searchParams = useSearchParams();
   const [keyword, setKeyword] = useState(searchParams.get("keyword") || "");
 
+  /** Push keyword to URL params; empty keyword produces a bare "/" */
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams();

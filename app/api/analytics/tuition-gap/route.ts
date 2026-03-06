@@ -1,7 +1,9 @@
+/**
+ * A2: Tuition gap (nonresident minus resident) by year for each college.
+ * Params: none. Returns: rows with resident/nonresident tuition and computed tuition_gap, ordered by year desc.
+ */
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
-
-// A2: Tuition gap (nonresident minus resident) by year for each college
 export async function GET() {
   return queryHandler(async (pool) => {
     const [rows] = await pool.query<RowDataPacket[]>(

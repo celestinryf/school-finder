@@ -1,3 +1,11 @@
+/**
+ * Faculty search form with last-name prefix and department dropdown filters.
+ *
+ * The department list is passed in from a server component (fetched at render
+ * time), so this client component doesn't need its own data fetch. Both
+ * filters are optional and write to URL params (`lastNamePrefix`,
+ * `departmentId`) that the server component reads for the faculty query.
+ */
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -24,6 +32,7 @@ export default function FacultySearch({
     searchParams.get("departmentId") || ""
   );
 
+  /** Set or remove each filter param, preserving other params (e.g. maxCost) */
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const params = new URLSearchParams(searchParams.toString());

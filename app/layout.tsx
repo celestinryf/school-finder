@@ -1,3 +1,11 @@
+/**
+ * Root layout for the School Finder app.
+ *
+ * Renders the top navigation bar (Home + Analytics links) and wraps all
+ * pages in a centered container. Uses Geist font family via next/font.
+ * No data fetching happens here — this is a pure layout component.
+ */
+
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import Link from "next/link";
