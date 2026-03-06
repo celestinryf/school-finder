@@ -177,6 +177,7 @@ export default function ManagePage() {
       {/* Edit form */}
       {editingRow && (
         <RowForm
+          key={getRowKey(selectedTable, editingRow)}
           columns={selectedTable.columns}
           initialValues={editingRow}
           onSubmit={handleUpdate}
@@ -208,8 +209,8 @@ export default function ManagePage() {
                   </td>
                 </tr>
               ) : (
-                rows.map((row, i) => (
-                  <tr key={i} className="hover:bg-gray-50">
+                rows.map((row) => (
+                  <tr key={getRowKey(selectedTable, row)} className="hover:bg-gray-50">
                     {selectedTable.columns.map((col) => (
                       <td key={col.name} className="px-3 py-2">
                         {formatCell(col, row[col.name])}
@@ -240,6 +241,13 @@ export default function ManagePage() {
       )}
     </div>
   );
+}
+
+function getRowKey(table: TableDef, row: Row): string {
+  return table.columns
+    .filter((c) => c.pk)
+    .map((c) => String(row[c.name] ?? ""))
+    .join("|");
 }
 
 function formatCell(col: ColumnDef, value: unknown): string {

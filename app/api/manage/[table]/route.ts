@@ -4,6 +4,8 @@ import { TABLE_MAP } from "@/lib/table-config";
 import type { ColumnDef } from "@/lib/table-config";
 import type { RowDataPacket, ResultSetHeader } from "mysql2";
 
+const DEFAULT_LIMIT = 500;
+
 function getTableDef(tableKey: string) {
   const def = TABLE_MAP.get(tableKey);
   if (!def) return null;
@@ -65,28 +67,41 @@ function validateBody(columns: ColumnDef[], body: Record<string, unknown>, pkOnl
   return { values, errors };
 }
 
-// GET — list all rows for a table
+function errorResponse(error: unknown) {
+  const isDuplicate = error instanceof Error && error.message.includes("Duplicate entry");
+  const status = isDuplicate ? 409 : 500;
+  const message = isDuplicate
+    ? "A record with this key already exists"
+    : process.env.NODE_ENV === "development" && error instanceof Error
+      ? error.message
+      : "Internal server error";
+  return NextResponse.json({ error: message }, { status });
+}
+
+// GET — list rows for a table (paginated)
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ table: string }> }
 ) {
+
   const { table } = await params;
   const def = getTableDef(table);
   if (!def) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
 
   try {
+    const url = new URL(req.url);
+    const limit = Math.min(Number(url.searchParams.get("limit")) || DEFAULT_LIMIT, 1000);
+    const offset = Math.max(Number(url.searchParams.get("offset")) || 0, 0);
+
     const pool = getPool();
     const colNames = def.columns.map((c) => c.name).join(", ");
     const [rows] = await pool.query<RowDataPacket[]>(
-      `SELECT ${colNames} FROM ${def.table} ORDER BY ${def.columns[0].name}`
+      `SELECT ${colNames} FROM ${def.table} ORDER BY ${def.columns[0].name} LIMIT ? OFFSET ?`,
+      [limit, offset]
     );
     return NextResponse.json(rows);
   } catch (error: unknown) {
-    const message =
-      process.env.NODE_ENV === "development" && error instanceof Error
-        ? error.message
-        : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return errorResponse(error);
   }
 }
 
@@ -95,6 +110,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ table: string }> }
 ) {
+
   const { table } = await params;
   const def = getTableDef(table);
   if (!def) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
@@ -116,12 +132,7 @@ export async function POST(
     );
     return NextResponse.json({ affectedRows: result.affectedRows, insertId: result.insertId }, { status: 201 });
   } catch (error: unknown) {
-    const message =
-      process.env.NODE_ENV === "development" && error instanceof Error
-        ? error.message
-        : "Internal server error";
-    const status = error instanceof Error && error.message.includes("Duplicate entry") ? 409 : 500;
-    return NextResponse.json({ error: message }, { status });
+    return errorResponse(error);
   }
 }
 
@@ -130,6 +141,7 @@ export async function PUT(
   req: NextRequest,
   { params }: { params: Promise<{ table: string }> }
 ) {
+
   const { table } = await params;
   const def = getTableDef(table);
   if (!def) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
@@ -162,11 +174,7 @@ export async function PUT(
     }
     return NextResponse.json({ affectedRows: result.affectedRows });
   } catch (error: unknown) {
-    const message =
-      process.env.NODE_ENV === "development" && error instanceof Error
-        ? error.message
-        : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return errorResponse(error);
   }
 }
 
@@ -175,6 +183,7 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ table: string }> }
 ) {
+
   const { table } = await params;
   const def = getTableDef(table);
   if (!def) return NextResponse.json({ error: "Unknown table" }, { status: 404 });
@@ -207,10 +216,6 @@ export async function DELETE(
     }
     return NextResponse.json({ affectedRows: result.affectedRows });
   } catch (error: unknown) {
-    const message =
-      process.env.NODE_ENV === "development" && error instanceof Error
-        ? error.message
-        : "Internal server error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return errorResponse(error);
   }
 }
