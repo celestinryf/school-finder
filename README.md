@@ -4,6 +4,8 @@ A proof-of-concept college and university information lookup tool built on a nor
 
 Built by **Celestin Ryf** and **Preston Sia**.
 
+**Live:** [school-finder.vercel.app](https://school-finder.vercel.app) *(update URL after deploy)*
+
 ## Roles
 
 - **Celestin Ryf && Preston Sia** — Project lead and developer. Designed the normalized database schema (18 tables), wrote all SQL (DDL, DML, 12 queries), set up TiDB Serverless hosting, and directed the architecture, feature scope, and workflow for the web application. Reviews and approves all code before it merges.
@@ -40,7 +42,7 @@ Built by **Celestin Ryf** and **Preston Sia**.
 | Language | TypeScript |
 | Database | MySQL 8 |
 | DB Driver | [mysql2](https://github.com/sidorares/node-mysql2) (raw SQL) |
-| Hosting | [Vercel](https://vercel.com/) (app) + [Railway](https://railway.app/) (database) |
+| Hosting | [Vercel](https://vercel.com/) (app) + [TiDB Serverless](https://tidbcloud.com/) (database) |
 
 ## Getting Started
 
@@ -60,18 +62,14 @@ npm install
 mysql -u root -p < sql/ryf_celestin_and_sia_preston_queries.sql
 ```
 
-**Option B: Railway**
+**Option B: TiDB Serverless**
 
-1. Create a MySQL service on [Railway](https://railway.app/)
-2. Import the SQL script via Railway's web UI or CLI
+1. Create a cluster on [TiDB Cloud](https://tidbcloud.com/) (free tier)
+2. Import the SQL script via the TiDB web console or MySQL CLI
 
 ### 3. Configure environment variables
 
-```bash
-cp .env.example .env.local
-```
-
-Edit `.env.local`:
+Create `.env.local`:
 
 ```env
 DATABASE_HOST=localhost
@@ -143,6 +141,20 @@ school-finder/
 | UW Tacoma | 1 | 3 | 2 | 26 |
 | UW Bothell | 2 | 5 | 5 | 8 |
 | UW Seattle | 3 | 5 | 5 | 7 |
+
+## Deployment
+
+Deployed on [Vercel](https://vercel.com/) with the following environment variables:
+
+| Variable | Value |
+|----------|-------|
+| `DATABASE_HOST` | TiDB Serverless gateway |
+| `DATABASE_PORT` | `4000` |
+| `DATABASE_USER` | Your TiDB username |
+| `DATABASE_PASSWORD` | Your TiDB password |
+| `DATABASE_NAME` | `ryf_celestin_and_sia_preston_db` |
+
+Vercel auto-deploys on push to `main`. Health check: `/api/health`.
 
 ## License
 
