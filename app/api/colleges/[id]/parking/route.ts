@@ -1,8 +1,10 @@
+/**
+ * Q3: Find parking permits for a college, optionally filtered by max cost.
+ * Params: id (path), maxCost (optional query). Returns: permits sorted by cost ascending.
+ */
 import { NextRequest } from "next/server";
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
-
-// Q3: Find parking permits for a college under a max cost
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

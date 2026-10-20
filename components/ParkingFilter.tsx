@@ -1,3 +1,10 @@
+/**
+ * Parking permit cost filter for the college detail page.
+ *
+ * Writes a `maxCost` URL parameter that the server component uses to filter
+ * parking permits at or below the given dollar amount. Preserves other
+ * existing query params (e.g. faculty filters) when updating the URL.
+ */
 "use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
@@ -10,6 +17,7 @@ export default function ParkingFilter({ collegeId }: { collegeId: number }) {
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Spread existing params so we don't clobber unrelated filters
     const params = new URLSearchParams(searchParams.toString());
     if (maxCost.trim()) {
       params.set("maxCost", maxCost.trim());

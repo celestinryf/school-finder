@@ -1,8 +1,10 @@
+/**
+ * Q1: Find colleges in a particular area and see what programs are available.
+ * Params: state (required), excludeCity (optional). Returns: colleges with their programs in the given state.
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
-
-// Q1: Find colleges in a particular area and see what programs are available
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const state = searchParams.get("state");

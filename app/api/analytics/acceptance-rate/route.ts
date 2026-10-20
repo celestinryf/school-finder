@@ -1,8 +1,10 @@
+/**
+ * A1: Acceptance rate trend by year (admitted / received).
+ * Params: collegeId (optional query). Returns: rows with year, applications received/admitted, and acceptance_rate_pct.
+ */
 import { NextRequest } from "next/server";
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
-
-// A1: Acceptance rate trend by year (admitted/received)
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const collegeId = searchParams.get("collegeId")

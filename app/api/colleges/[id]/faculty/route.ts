@@ -1,8 +1,10 @@
+/**
+ * Q7: Search faculty by last name prefix and department (directory-style lookup).
+ * Params: id (path), departmentId (optional query), lastNamePrefix (optional query). Returns: faculty records.
+ */
 import { NextRequest } from "next/server";
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
-
-// Q7: Search faculty by last name prefix and department (directory-style)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }

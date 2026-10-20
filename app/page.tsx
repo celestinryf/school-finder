@@ -1,3 +1,19 @@
+/**
+ * Home page — college cards grid with program/college search.
+ *
+ * Server Component that directly queries the database (no API routes).
+ * Displays all colleges as clickable cards showing name, location, and
+ * walkscore stats. When a `keyword` search param is present, also runs
+ * a program search and renders matching results in a table above the grid.
+ *
+ * Data fetched:
+ *  - getColleges(): all colleges joined with location + walkscore_stats
+ *  - searchPrograms(keyword): programs matching keyword (by program name,
+ *    college name, or campus), only when keyword is provided
+ *
+ * Client child: <SearchForm /> — thin wrapper that pushes ?keyword= to the URL.
+ */
+
 import Link from "next/link";
 import { Suspense } from "react";
 import { getPool } from "@/lib/db";
@@ -26,6 +42,7 @@ interface ProgramResult extends RowDataPacket {
   program_type: string | null;
 }
 
+/** Fetches all colleges with their location and walkscore data, ordered by name. */
 async function getColleges(): Promise<College[]> {
   const pool = getPool();
   const [rows] = await pool.query<College[]>(`
@@ -40,6 +57,7 @@ async function getColleges(): Promise<College[]> {
   return rows;
 }
 
+/** Searches programs by keyword against program name, college name, and campus (LIKE %keyword%). */
 async function searchPrograms(keyword: string): Promise<ProgramResult[]> {
   const pool = getPool();
   const [rows] = await pool.query<ProgramResult[]>(

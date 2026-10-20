@@ -1,8 +1,10 @@
+/**
+ * Q2: Search for a college with a particular program or offering.
+ * Params: keyword (required, matched via LIKE). Returns: colleges with matching program names.
+ */
 import { NextRequest, NextResponse } from "next/server";
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
-
-// Q2: Search for a college with a particular program or offering
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const keyword = searchParams.get("keyword");

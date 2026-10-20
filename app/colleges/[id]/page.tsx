@@ -1,3 +1,23 @@
+/**
+ * College detail page — overview, departments, programs, parking, housing, faculty.
+ *
+ * Server Component that fetches a single college by ID from the URL param.
+ * After loading the college overview, fetches all section data in parallel
+ * via Promise.all (departments, programs, parking permits, housing, faculty,
+ * phone numbers).
+ *
+ * Supports three optional search-param filters:
+ *  - maxCost: filters parking permits to those at or below this price
+ *  - lastNamePrefix: filters faculty by last-name prefix (LIKE prefix%)
+ *  - departmentId: filters faculty to a specific department
+ *
+ * Returns 404 (via notFound()) if the college_id does not exist.
+ *
+ * Client children:
+ *  - <ParkingFilter />: pushes ?maxCost= to the URL
+ *  - <FacultySearch />: pushes ?lastNamePrefix= and ?departmentId= to the URL
+ */
+
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getPool } from "@/lib/db";
@@ -285,6 +305,7 @@ export default async function CollegeDetailPage({
   );
 }
 
+/** Reusable collapsible-style section wrapper. Renders a titled card with an item count badge. */
 function Section({
   title,
   count,

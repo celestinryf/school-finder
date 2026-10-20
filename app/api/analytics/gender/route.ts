@@ -1,8 +1,10 @@
+/**
+ * A4: Gender distribution by college-year (pivot-style: female_pct, male_pct, other_pct).
+ * Params: collegeId (optional query). Returns: one row per college-year with gender percentages.
+ */
 import { NextRequest } from "next/server";
 import { queryHandler } from "@/lib/api";
 import type { RowDataPacket } from "mysql2";
-
-// A4: Gender distribution by college-year (pivot-style)
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
   const collegeId = searchParams.get("collegeId")

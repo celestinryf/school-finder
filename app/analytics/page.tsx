@@ -1,3 +1,17 @@
+/**
+ * Analytics dashboard — per-school cards with five analytical queries (A1-A5).
+ *
+ * Server Component that fetches all analytical data in parallel via Promise.all,
+ * then groups results by college_id to render per-school cards. Each card shows:
+ *  - A1: Acceptance rate trends (applications received/admitted/rate by year)
+ *  - A2: Tuition gap (nonresident minus resident tuition by year)
+ *  - A3: Diversity composition (ethnicity breakdown by year)
+ *  - A4: Gender distribution (female/male/other % by year)
+ *
+ * A5 (walkability) is rendered separately as a cross-school comparison table,
+ * filtering colleges with walk score > 70 AND transit score > 70.
+ */
+
 import { getPool } from "@/lib/db";
 import type { RowDataPacket } from "mysql2";
 
@@ -56,7 +70,7 @@ export default async function AnalyticsPage() {
     `),
   ]);
 
-  // Group data by college_id
+  /** Groups an array of rows into a Map keyed by college_id for per-school rendering. */
   function groupBy(rows: RowDataPacket[]) {
     const map = new Map<number, RowDataPacket[]>();
     for (const r of rows) {
@@ -282,6 +296,7 @@ export default async function AnalyticsPage() {
   );
 }
 
+/** Reusable sub-section within a per-school analytics card. Renders a titled block with horizontal scroll. */
 function AnalyticsSection({
   title,
   children,
